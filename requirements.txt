@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+python-multipart
+pandas
+python-dotenv
+groq
+scikit-learn
+skl2onnx
