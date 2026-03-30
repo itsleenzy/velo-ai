@@ -1,0 +1,1293 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Velo — AI ML Platform</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap"></noscript>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #03070a;
+      --bg2:       #060d12;
+      --panel:     #090f14;
+      --panel2:    #0c1419;
+      --border:    rgba(0,210,180,0.1);
+      --border2:   rgba(0,210,180,0.22);
+      --accent:    #00d4b4;
+      --accent2:   #00aaff;
+      --glow:      rgba(0,212,180,0.18);
+      --warn:      #ffae00;
+      --danger:    #ff3f5e;
+      --text:      #cdd8e0;
+      --text2:     #6b8090;
+      --text3:     #3a5060;
+      --display:   'Bebas Neue', sans-serif;
+      --body:      'IBM Plex Sans', sans-serif;
+      --mono:      'IBM Plex Mono', monospace;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--body);
+      min-height: 100vh;
+      overflow-x: hidden;
+      cursor: default;
+    }
+
+    /* ── Animated background ── */
+    #canvas-bg {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      opacity: 0.55;
+      pointer-events: none;
+    }
+
+    /* Scanline overlay */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,0,0,0.12) 2px,
+        rgba(0,0,0,0.12) 4px
+      );
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .wrap {
+      position: relative;
+      z-index: 2;
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 32px 100px;
+    }
+
+    /* ── Header ── */
+    header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 80px 0 100px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 60px;
+      position: relative;
+      min-height: 320px;
+    }
+
+    .logo {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 30px;
+      margin-bottom: 80px;
+    }
+
+    .logo-mark {
+      position: relative;
+      width: 240px; height: 240px;
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+    }
+    .logo-mark svg {
+      position: absolute;
+      inset: 0;
+      animation: spin-slow 8s linear infinite;
+    }
+    @keyframes spin-slow { to { transform: rotate(360deg); } }
+
+    .logo-mark-inner {
+      width: 120px; height: 120px;
+      background: var(--accent);
+      clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+      display: grid;
+      place-items: center;
+      font-family: var(--display);
+      font-size: 56px;
+      color: #000;
+      letter-spacing: 1px;
+      z-index: 1;
+      position: relative;
+      font-weight: bold;
+    }
+
+    .logo-text {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      text-align: center;
+    }
+
+    .logo-name {
+      font-family: var(--display);
+      font-size: 100px;
+      letter-spacing: 6px;
+      color: #fff;
+      line-height: 1;
+      font-weight: bold;
+    }
+
+    .logo-sub {
+      font-family: var(--mono);
+      font-size: 18px;
+      color: var(--accent);
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+
+    .header-right {
+      position: absolute;
+      top: 28px;
+      right: 32px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .sys-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 7px 14px;
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--text2);
+      letter-spacing: 1px;
+    }
+
+    .led {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 8px var(--accent), 0 0 20px rgba(0,212,180,0.4);
+      animation: blink 2.5s ease-in-out infinite;
+    }
+    @keyframes blink { 0%,90%,100%{opacity:1} 95%{opacity:0.2} }
+
+    .time-display {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text3);
+      letter-spacing: 1px;
+    }
+
+    /* ── Step tracker ── */
+    .pipeline {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      margin-bottom: 32px;
+      overflow: hidden;
+    }
+
+    .pipe-step {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 11px 20px;
+      font-family: var(--mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--text3);
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-right: none;
+      transition: all 0.3s;
+      flex: 1;
+      position: relative;
+    }
+    .pipe-step:first-child { border-radius: 4px 0 0 4px; }
+    .pipe-step:last-child { border-right: 1px solid var(--border); border-radius: 0 4px 4px 0; }
+
+    .pipe-step.active {
+      color: var(--accent);
+      background: rgba(0,212,180,0.06);
+      border-color: var(--border2);
+    }
+    .pipe-step.done { color: var(--text2); }
+    .pipe-step.active::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 2px;
+      background: var(--accent);
+      box-shadow: 0 0 8px var(--accent);
+    }
+
+    .pipe-n {
+      width: 20px; height: 20px;
+      border: 1px solid currentColor;
+      border-radius: 2px;
+      display: grid;
+      place-items: center;
+      font-size: 9px;
+      flex-shrink: 0;
+    }
+    .pipe-step.active .pipe-n { background: var(--accent); border-color: var(--accent); color: #000; }
+    .pipe-step.done .pipe-n { background: var(--text3); border-color: var(--text3); color: #000; }
+
+    /* ── AI Prompt section ── */
+    .ai-section {
+      margin-bottom: 28px;
+      position: relative;
+    }
+
+    .section-label {
+      font-family: var(--mono);
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      color: var(--accent);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .ai-prompt-card {
+      background: var(--panel);
+      border: 1px solid var(--border2);
+      border-radius: 6px;
+      padding: 0;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .ai-prompt-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(0,212,180,0.04) 0%, transparent 50%);
+      pointer-events: none;
+    }
+
+    .ai-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      background: var(--panel2);
+    }
+
+    .ai-header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .ai-title {
+      font-family: var(--display);
+      font-size: 20px;
+      letter-spacing: 3px;
+      color: #fff;
+    }
+
+    .ai-model-tag {
+      font-family: var(--mono);
+      font-size: 9px;
+      color: var(--accent);
+      background: rgba(0,212,180,0.1);
+      border: 1px solid rgba(0,212,180,0.2);
+      border-radius: 2px;
+      padding: 3px 8px;
+      letter-spacing: 1px;
+    }
+
+    .ai-body {
+      padding: 20px;
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+    }
+
+    .prompt-prefix {
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--accent);
+      padding-top: 13px;
+      flex-shrink: 0;
+      user-select: none;
+    }
+
+    textarea {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 13px;
+      padding: 10px 0;
+      outline: none;
+      resize: none;
+      line-height: 1.7;
+    }
+    textarea::placeholder { color: var(--text3); }
+
+    .ai-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+      border-top: 1px solid var(--border);
+      background: var(--panel2);
+    }
+
+    .ai-hint {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--text3);
+      letter-spacing: 0.5px;
+    }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border: none;
+      border-radius: 3px;
+      font-family: var(--mono);
+      font-weight: 500;
+      font-size: 11px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.2s;
+      padding: 10px 20px;
+      white-space: nowrap;
+    }
+
+    .btn-exec {
+      background: var(--accent);
+      color: #000;
+      padding: 11px 28px;
+    }
+    .btn-exec:hover {
+      background: #00ffe8;
+      box-shadow: 0 0 20px rgba(0,212,180,0.5), 0 0 60px rgba(0,212,180,0.2);
+      transform: translateY(-1px);
+    }
+    .btn-exec:active { transform: translateY(0); }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--text2);
+      border: 1px solid var(--border);
+    }
+    .btn-ghost:hover { border-color: var(--border2); color: var(--text); background: rgba(255,255,255,0.03); }
+
+    .btn-warn {
+      background: transparent;
+      color: var(--danger);
+      border: 1px solid rgba(255,63,94,0.2);
+    }
+    .btn-warn:hover { background: rgba(255,63,94,0.08); border-color: rgba(255,63,94,0.4); }
+
+    .btn-full { width: 100%; }
+
+    .btn[disabled] { opacity: 0.35; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
+
+    /* ── Main layout ── */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      gap: 16px;
+    }
+
+    .sidebar { display: flex; flex-direction: column; gap: 16px; }
+    .content { display: flex; flex-direction: column; gap: 16px; }
+
+    /* ── Panel ── */
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+      transition: border-color 0.3s;
+    }
+    .panel:hover { border-color: rgba(0,212,180,0.16); }
+
+    .panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      background: var(--panel2);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .panel-title {
+      font-family: var(--mono);
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 2.5px;
+      color: var(--text2);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .panel-title-dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+
+    .panel-body { padding: 16px; }
+
+    /* ── Upload drop ── */
+    .drop-zone {
+      border: 1px dashed var(--border2);
+      border-radius: 4px;
+      padding: 20px 16px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .drop-zone:hover {
+      border-color: var(--accent);
+      background: rgba(0,212,180,0.04);
+    }
+    .drop-icon { font-size: 22px; margin-bottom: 6px; opacity: 0.5; }
+    .drop-text { font-size: 11px; color: var(--text2); font-family: var(--mono); }
+    .drop-hint { font-size: 9px; color: var(--text3); font-family: var(--mono); margin-top: 3px; letter-spacing: 1px; text-transform: uppercase; }
+
+    /* ── Form controls ── */
+    .field { margin-bottom: 12px; }
+    .field-label {
+      font-family: var(--mono);
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--text3);
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    select, input[type=text] {
+      width: 100%;
+      background: var(--panel2);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 12px;
+      padding: 9px 12px;
+      outline: none;
+      transition: border-color 0.2s;
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%236b8090' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+    }
+    select:focus, input[type=text]:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(0,212,180,0.1);
+    }
+    select option { background: #0c1419; }
+
+    /* ── Train button ── */
+    .train-btn {
+      width: 100%;
+      padding: 16px;
+      background: var(--accent);
+      color: #000;
+      border: none;
+      border-radius: 4px;
+      font-family: var(--display);
+      font-size: 22px;
+      letter-spacing: 5px;
+      cursor: pointer;
+      transition: all 0.25s;
+      position: relative;
+      overflow: hidden;
+    }
+    .train-btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+      transform: translateX(-100%);
+      transition: transform 0.5s;
+    }
+    .train-btn:hover {
+      background: #00ffe8;
+      box-shadow: 0 0 30px rgba(0,212,180,0.6), 0 0 80px rgba(0,212,180,0.2);
+    }
+    .train-btn:hover::before { transform: translateX(100%); }
+
+    /* ── Progress ── */
+    .progress-track {
+      height: 3px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 0;
+      overflow: hidden;
+      margin-top: 14px;
+    }
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      transition: width 0.7s ease;
+      box-shadow: 0 0 8px var(--accent);
+    }
+
+    /* ── Status line ── */
+    .status-line {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--text2);
+      margin-top: 10px;
+      min-height: 14px;
+      letter-spacing: 0.5px;
+    }
+    .status-line.ok { color: var(--accent); }
+    .status-line.err { color: var(--danger); }
+    .status-line.warn { color: var(--warn); }
+
+    /* ── Score display ── */
+    .score-display {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      margin: 8px 0 4px;
+    }
+    .score-number {
+      font-family: var(--display);
+      font-size: 56px;
+      letter-spacing: 2px;
+      color: var(--accent);
+      line-height: 1;
+      text-shadow: 0 0 40px rgba(0,212,180,0.4);
+    }
+    .score-unit {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text3);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .score-model {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text2);
+      letter-spacing: 0.5px;
+    }
+
+    /* ── Chart panel ── */
+    .chart-wrap { padding: 16px 16px 8px; }
+
+    /* ── Leaderboard ── */
+    .lb-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.15s;
+    }
+    .lb-item:last-child { border-bottom: none; }
+    .lb-item:hover { background: rgba(255,255,255,0.02); }
+    .lb-item.champion { background: rgba(0,212,180,0.04); }
+
+    .lb-rank {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--text3);
+      width: 16px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+    .lb-item.champion .lb-rank { color: var(--accent); }
+
+    .lb-name {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text2);
+      width: 140px;
+      flex-shrink: 0;
+    }
+    .lb-item.champion .lb-name { color: var(--text); }
+
+    .lb-track {
+      flex: 1;
+      height: 3px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 0;
+      overflow: hidden;
+    }
+    .lb-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      transition: width 1s ease;
+    }
+    .lb-item:not(.champion) .lb-fill { background: var(--text3); }
+
+    .lb-score {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text2);
+      width: 48px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+    .lb-tag {
+      font-family: var(--mono);
+      font-size: 8px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--accent);
+      border: 1px solid rgba(0,212,180,0.25);
+      border-radius: 2px;
+      padding: 2px 6px;
+      flex-shrink: 0;
+    }
+
+    /* ── Table ── */
+    .tbl-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    th {
+      font-family: var(--mono);
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--accent);
+      padding: 9px 14px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      background: var(--panel2);
+      white-space: nowrap;
+    }
+    td {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text2);
+      padding: 8px 14px;
+      border-bottom: 1px solid rgba(0,212,180,0.05);
+      white-space: nowrap;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { color: var(--text); background: rgba(0,212,180,0.025); }
+
+    /* ── Terminal ── */
+    .terminal {
+      background: #020609;
+      padding: 14px 16px;
+      font-family: var(--mono);
+      font-size: 11px;
+      line-height: 1.9;
+      color: #3ef0c0;
+      min-height: 100px;
+      max-height: 180px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+      border-top: 1px solid var(--border);
+    }
+    .terminal::-webkit-scrollbar { width: 3px; }
+    .terminal::-webkit-scrollbar-track { background: transparent; }
+    .terminal::-webkit-scrollbar-thumb { background: var(--border); }
+
+    /* ── Spinner ── */
+    .spin {
+      display: inline-block;
+      width: 11px; height: 11px;
+      border: 1.5px solid rgba(0,0,0,0.25);
+      border-top-color: #000;
+      border-radius: 50%;
+      animation: spinning 0.6s linear infinite;
+    }
+    @keyframes spinning { to { transform: rotate(360deg); } }
+
+    /* ── Training pulse ── */
+    @keyframes training-pulse {
+      0%,100% { box-shadow: 0 0 0 1px rgba(0,212,180,0.2), 0 0 20px rgba(0,212,180,0.05); }
+      50%      { box-shadow: 0 0 0 2px rgba(0,212,180,0.5), 0 0 40px rgba(0,212,180,0.15); }
+    }
+    .is-training { animation: training-pulse 1.5s ease-in-out infinite; }
+
+    /* ── Fade in ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .fade-in { animation: fadeUp 0.4s ease forwards; }
+
+    /* ── Download grid ── */
+    .dl-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .hidden { display: none !important; }
+
+    /* ── Responsive ── */
+    @media (max-width: 960px) {
+      .main-grid { grid-template-columns: 1fr; }
+      .dl-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Animated canvas background -->
+<canvas id="canvas-bg"></canvas>
+
+<div class="wrap">
+
+  <!-- ── Header ── -->
+  <header>
+    <div class="logo">
+      <div class="logo-mark">
+        <img src="/static/velo_dark.png" alt="Velo Logo" width="240" height="240">
+      </div>
+      <div class="logo-text">
+        <div class="logo-sub">No code. No setup. Just ML.</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="time-display" id="clockDisplay">--:--:--</div>
+      <div class="sys-badge">
+        <div class="led" id="ledDot"></div>
+        <span id="sysLabel">ONLINE</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── Pipeline tracker ── -->
+  <div class="pipeline">
+    <div class="pipe-step active" id="ps1"><div class="pipe-n">01</div>Generate</div>
+    <div class="pipe-step" id="ps2"><div class="pipe-n">02</div>Clean</div>
+    <div class="pipe-step" id="ps3"><div class="pipe-n">03</div>Train</div>
+    <div class="pipe-step" id="ps4"><div class="pipe-n">04</div>Export</div>
+  </div>
+
+  <!-- ── AI Prompt ── -->
+  <div class="ai-section">
+    <div class="section-label">Natural Language Input</div>
+
+    <div class="ai-prompt-card">
+      <div class="ai-header">
+        <div class="ai-header-left">
+          <div class="ai-title">DESCRIBE YOUR PROBLEM</div>
+        </div>
+        <button class="btn btn-exec" id="generateBtn">
+          <span id="genLabel">EXECUTE</span>
+          <span id="genSpin" class="spin hidden"></span>
+        </button>
+      </div>
+      <div class="ai-body">
+        <div class="prompt-prefix">›_</div>
+        <textarea id="problemInput" rows="3"
+          placeholder="e.g. Predict customer churn in a telecom company based on usage patterns and billing data..."></textarea>
+      </div>
+      <div class="ai-footer">
+        <div class="status-line" id="genStatus"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Main grid ── -->
+  <div class="main-grid">
+
+    <!-- ── Sidebar ── -->
+    <div class="sidebar">
+
+      <!-- Upload -->
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title"><div class="panel-title-dot"></div>Data Source</div>
+        </div>
+        <div class="panel-body">
+          <label for="fileInput">
+            <div class="drop-zone">
+              <div class="drop-icon">⬡</div>
+              <div class="drop-text">Upload CSV file</div>
+              <div class="drop-hint">or use AI generation above</div>
+            </div>
+          </label>
+          <input type="file" id="fileInput" accept=".csv" style="display:none">
+          <div class="status-line" id="uploadStatus"></div>
+        </div>
+      </div>
+
+      <!-- Config -->
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title"><div class="panel-title-dot"></div>Configuration</div>
+        </div>
+        <div class="panel-body">
+          <div class="field">
+            <label class="field-label">Task Type</label>
+            <select id="taskSelect">
+              <option>Classification</option>
+              <option>Regression</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="field-label">Model Strategy</label>
+            <select id="modelSelect">
+              <option>Auto-Suggest</option>
+              <option>Random Forest</option>
+              <option>Gradient Boosting</option>
+              <option>Neural Network</option>
+              <option>Linear Regression</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Execute -->
+      <div class="panel" id="execPanel">
+        <div class="panel-head">
+          <div class="panel-title"><div class="panel-title-dot"></div>Execution</div>
+          <span id="trainStatusBadge" style="font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:1px;">IDLE</span>
+        </div>
+        <div class="panel-body">
+          <button class="train-btn" id="trainBtn">TRAIN</button>
+          <div class="progress-track">
+            <div class="progress-fill" id="progressBar"></div>
+          </div>
+          <div class="status-line" id="trainStatus">Awaiting dataset...</div>
+
+          <div style="margin-top:14px; padding-top:14px; border-top:1px solid var(--border);">
+            <div class="dl-grid" id="dlGroup">
+              <button class="btn btn-ghost hidden" id="dlPkl">↓ PKL</button>
+              <button class="btn btn-ghost hidden" id="dlOnnx">↓ ONNX</button>
+              <button class="btn btn-ghost hidden" id="viewDocs" style="grid-column:span 2;">API Docs</button>
+            </div>
+          </div>
+
+          <button class="btn btn-warn btn-full" id="resetBtn" style="margin-top:10px;">⟳ Reset</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── Content ── -->
+    <div class="content">
+
+      <!-- Score card -->
+      <div class="panel hidden" id="scorePanel">
+        <div class="panel-head">
+          <div class="panel-title"><div class="panel-title-dot"></div>Champion Result</div>
+          <span id="taskBadge" style="font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;"></span>
+        </div>
+        <div class="panel-body">
+          <div class="score-display">
+            <div class="score-number" id="scoreNum">—</div>
+            <div class="score-unit" id="scoreUnit">accuracy</div>
+          </div>
+          <div class="score-model">Champion: <span id="champName" style="color:var(--text);">—</span></div>
+          <div class="status-line" id="datasetInfo" style="margin-top:6px;"></div>
+        </div>
+      </div>
+
+      <!-- Chart -->
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title"><div class="panel-title-dot"></div>Training Curve</div>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="metricsChart" height="120"></canvas>
+        </div>
+      </div>
+
+      <!-- Leaderboard -->
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title"><div class="panel-title-dot"></div>Experiment Leaderboard</div>
+        </div>
+        <div id="lbList">
+          <div style="padding:16px;font-family:var(--mono);font-size:10px;color:var(--text3);">No experiments run yet.</div>
+        </div>
+      </div>
+
+      <!-- Preview -->
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title"><div class="panel-title-dot"></div>Dataset Preview</div>
+          <span id="previewMeta" style="font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:1px;"></span>
+        </div>
+        <div class="tbl-wrap" id="previewWrap">
+          <div style="padding:16px;font-family:var(--mono);font-size:10px;color:var(--text3);">No data loaded.</div>
+        </div>
+      </div>
+
+      <!-- Terminal -->
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title"><div class="panel-title-dot"></div>System Log</div>
+        </div>
+        <div class="terminal" id="terminal">velo@ai-core:~$ system initialised
+velo@ai-core:~$ </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+/* ── Canvas animated background (DISABLED for performance) ── */
+/*
+(function() {
+  const canvas = document.getElementById('canvas-bg');
+  const ctx = canvas.getContext('2d');
+  let W, H, nodes = [], raf;
+
+  function resize() {
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+
+  function init() {
+    nodes = [];
+    const count = Math.floor((W * H) / 18000);
+    for (let i = 0; i < count; i++) {
+      nodes.push({
+        x: Math.random() * W,
+        y: Math.random() * H,
+        vx: (Math.random() - 0.5) * 0.25,
+        vy: (Math.random() - 0.5) * 0.25,
+        r: Math.random() * 1.5 + 0.5,
+      });
+    }
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    const LINK = 120;
+
+    nodes.forEach(n => {
+      n.x += n.vx; n.y += n.vy;
+      if (n.x < 0 || n.x > W) n.vx *= -1;
+      if (n.y < 0 || n.y > H) n.vy *= -1;
+    });
+
+    for (let i = 0; i < nodes.length; i++) {
+      for (let j = i + 1; j < nodes.length; j++) {
+        const dx = nodes[i].x - nodes[j].x;
+        const dy = nodes[i].y - nodes[j].y;
+        const d = Math.sqrt(dx*dx + dy*dy);
+        if (d < LINK) {
+          ctx.beginPath();
+          ctx.moveTo(nodes[i].x, nodes[i].y);
+          ctx.lineTo(nodes[j].x, nodes[j].y);
+          ctx.strokeStyle = `rgba(0,212,180,${0.12 * (1 - d/LINK)})`;
+          ctx.lineWidth = 0.6;
+          ctx.stroke();
+        }
+      }
+    }
+
+    nodes.forEach(n => {
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(0,212,180,0.35)';
+      ctx.fill();
+    });
+
+    raf = requestAnimationFrame(draw);
+  }
+
+  resize();
+  init();
+  draw();
+  window.addEventListener('resize', () => { resize(); init(); });
+})();
+*/
+
+document.getElementById('canvas-bg').style.display = 'none';
+
+/* ── Clock ── */
+(function() {
+  const el = document.getElementById('clockDisplay');
+  function tick() {
+    const now = new Date();
+    el.textContent = now.toTimeString().slice(0,8);
+  }
+  tick();
+  setInterval(tick, 1000);
+})();
+
+/* ── Chart ── */
+let chart;
+function initChart() {
+  if (typeof Chart === 'undefined') {
+    setTimeout(initChart, 100);
+    return;
+  }
+  if (!document.getElementById('metricsChart')) return;
+  chart = new Chart(document.getElementById('metricsChart').getContext('2d'), {
+    type: 'line',
+    data: {
+      labels: [],
+      datasets: [
+        { label: 'Score',  data: [], borderColor: '#00d4b4', backgroundColor: 'rgba(0,212,180,0.06)', tension: 0.4, pointRadius: 2, borderWidth: 1.5 },
+        { label: 'Loss',   data: [], borderColor: '#00aaff', backgroundColor: 'rgba(0,170,255,0.06)', tension: 0.4, pointRadius: 2, borderWidth: 1.5 }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { labels: { color: '#3a5060', font: { family: 'IBM Plex Mono', size: 10 }, boxWidth: 10 } }
+      },
+      scales: {
+        x: { ticks: { color: '#3a5060', font: { family: 'IBM Plex Mono', size: 9 } }, grid: { color: 'rgba(0,212,180,0.04)' } },
+        y: { beginAtZero: true, ticks: { color: '#3a5060', font: { family: 'IBM Plex Mono', size: 9 } }, grid: { color: 'rgba(0,212,180,0.04)' } }
+      }
+    }
+  });
+}
+initChart();
+
+/* ── Helpers ── */
+function log(msg) {
+  const t = document.getElementById('terminal');
+  t.textContent += `\n>> ${msg}`;
+  t.scrollTop = t.scrollHeight;
+}
+
+function setStep(n) {
+  for (let i = 1; i <= 4; i++) {
+    const el = document.getElementById(`ps${i}`);
+    el.classList.remove('active','done');
+    if (i < n) el.classList.add('done');
+    else if (i === n) el.classList.add('active');
+  }
+}
+
+function renderTable(rows) {
+  const wrap = document.getElementById('previewWrap');
+  if (!rows || !rows.length) { wrap.innerHTML = "<div style='padding:16px;font-family:var(--mono);font-size:10px;color:var(--text3);'>No data.</div>"; return; }
+  const cols = Object.keys(rows[0]);
+  let h = '<div class="tbl-wrap"><table><thead><tr>' + cols.map(c => `<th>${c}</th>`).join('') + '</tr></thead><tbody>';
+  rows.forEach(r => { h += '<tr>' + cols.map(c => `<td>${String(r[c] ?? '—').slice(0,18)}</td>`).join('') + '</tr>'; });
+  h += '</tbody></table></div>';
+  wrap.innerHTML = h;
+}
+
+function onDataLoaded(data, src) {
+  log(`Dataset ready — ${data.rows} rows · ${data.columns?.length ?? '?'} cols · source:${src}`);
+  renderTable(data.preview);
+  document.getElementById('previewMeta').textContent = `${data.rows}R · ${data.columns?.length ?? '?'}C`;
+  document.getElementById('datasetInfo').textContent = `${data.rows} rows · target: ${data.columns?.at(-1) ?? '?'}`;
+  document.getElementById('trainStatus').textContent = 'Dataset loaded — ready to train';
+  document.getElementById('sysLabel').textContent = 'READY';
+  setStep(2);
+  setTimeout(() => setStep(3), 600);
+}
+
+/* ── Generate ── */
+document.getElementById('generateBtn').addEventListener('click', async () => {
+  const prob = document.getElementById('problemInput').value.trim();
+  if (!prob) { document.getElementById('genStatus').textContent = '⚠ Enter a problem description'; document.getElementById('genStatus').className = 'status-line err'; return; }
+
+  document.getElementById('genLabel').textContent = 'RUNNING...';
+  document.getElementById('genSpin').classList.remove('hidden');
+  document.getElementById('generateBtn').disabled = true;
+  document.getElementById('genStatus').textContent = 'Querying Claude...';
+  document.getElementById('genStatus').className = 'status-line warn';
+  document.getElementById('sysLabel').textContent = 'GENERATING';
+  log(`Problem submitted: "${prob.slice(0,70)}..."`);
+  log('Waiting for AI response (15–30s)...');
+
+  const fd = new FormData();
+  fd.append('problem', prob);
+  try {
+    const res = await fetch('/generate-dataset', { method: 'POST', body: fd });
+    const data = await res.json();
+    if (res.ok) {
+      document.getElementById('genStatus').textContent = `✓ ${data.rows} rows generated`;
+      document.getElementById('genStatus').className = 'status-line ok';
+      log(`Columns: ${data.columns?.join(', ')}`);
+      onDataLoaded(data, 'ai');
+    } else {
+      document.getElementById('genStatus').textContent = '✗ ' + data.detail;
+      document.getElementById('genStatus').className = 'status-line err';
+      log('Error: ' + data.detail);
+      document.getElementById('sysLabel').textContent = 'ERROR';
+    }
+  } catch(e) {
+    document.getElementById('genStatus').textContent = '✗ Connection failed';
+    document.getElementById('genStatus').className = 'status-line err';
+    log('Connection failed: ' + e.message);
+  }
+  document.getElementById('genLabel').textContent = 'EXECUTE';
+  document.getElementById('genSpin').classList.add('hidden');
+  document.getElementById('generateBtn').disabled = false;
+});
+
+/* ── Upload ── */
+document.getElementById('fileInput').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  document.getElementById('uploadStatus').textContent = 'Processing...';
+  document.getElementById('uploadStatus').className = 'status-line warn';
+  log(`Upload: ${file.name}`);
+  const fd = new FormData();
+  fd.append('file', file);
+  try {
+    const res = await fetch('/upload', { method: 'POST', body: fd });
+    const data = await res.json();
+    if (res.ok) {
+      document.getElementById('uploadStatus').textContent = `✓ ${data.rows} rows loaded`;
+      document.getElementById('uploadStatus').className = 'status-line ok';
+      onDataLoaded(data, 'upload');
+    } else {
+      document.getElementById('uploadStatus').textContent = '✗ ' + data.detail;
+      document.getElementById('uploadStatus').className = 'status-line err';
+    }
+  } catch { document.getElementById('uploadStatus').textContent = '✗ Connection failed'; }
+});
+
+/* ── Train ── */
+document.getElementById('trainBtn').addEventListener('click', async () => {
+  const task = document.getElementById('taskSelect').value;
+  document.getElementById('trainStatus').textContent = 'Initialising experiments...';
+  document.getElementById('progressBar').style.width = '12%';
+  document.getElementById('execPanel').classList.add('is-training');
+  document.getElementById('trainStatusBadge').textContent = 'RUNNING';
+  document.getElementById('lbList').innerHTML = "<div style='padding:16px;font-family:var(--mono);font-size:10px;color:var(--text3);'>Running experiments...</div>";
+  document.getElementById('scorePanel').classList.add('hidden');
+  document.getElementById('sysLabel').textContent = 'TRAINING';
+  ['dlPkl','dlOnnx','viewDocs'].forEach(id => document.getElementById(id).classList.add('hidden'));
+  log(`Task: ${task} | Strategy: ${document.getElementById('modelSelect').value}`);
+
+  const fd = new FormData();
+  fd.append('task', task);
+  fd.append('model_name', document.getElementById('modelSelect').value);
+
+  try {
+    const res = await fetch('/train', { method:'POST', body: fd });
+    const data = await res.json();
+
+    if (res.ok) {
+      document.getElementById('progressBar').style.width = '100%';
+      data.logs?.forEach(l => log(l));
+
+      // Leaderboard
+      document.getElementById('lbList').innerHTML = '';
+      data.leaderboard?.forEach((e, i) => {
+        const pct = (Math.max(0, Math.min(1, e.score)) * 100).toFixed(1);
+        const champ = e.name === data.champion;
+        const row = document.createElement('div');
+        row.className = 'lb-item' + (champ ? ' champion' : '');
+        row.innerHTML = `
+          <div class="lb-rank">${i+1}</div>
+          <div class="lb-name">${e.name}</div>
+          <div class="lb-track"><div class="lb-fill" style="width:${pct}%"></div></div>
+          <div class="lb-score">${e.score.toFixed(3)}</div>
+          ${champ ? '<div class="lb-tag">champion</div>' : ''}
+        `;
+        document.getElementById('lbList').appendChild(row);
+        log(`[${i+1}] ${e.name}: ${e.score.toFixed(4)}`);
+      });
+
+      // Score card
+      const sc = document.getElementById('scorePanel');
+      sc.classList.remove('hidden'); sc.classList.add('fade-in');
+      document.getElementById('scoreNum').textContent = (data.score * 100).toFixed(1) + '%';
+      document.getElementById('scoreUnit').textContent = task === 'Regression' ? 'r² score' : 'accuracy';
+      document.getElementById('champName').textContent = data.champion;
+      document.getElementById('taskBadge').textContent = task.toUpperCase();
+
+      // Chart
+      chart.data.labels = []; chart.data.datasets[0].data = []; chart.data.datasets[1].data = [];
+      data.graph_data?.forEach((pt, i) => {
+        setTimeout(() => {
+          chart.data.labels.push(`E${pt.epoch}`);
+          chart.data.datasets[0].data.push(pt.accuracy);
+          chart.data.datasets[1].data.push(pt.loss);
+          chart.update();
+          if (i === data.graph_data.length - 1) {
+            document.getElementById('trainStatus').textContent = '✓ Training complete';
+            document.getElementById('trainStatus').className = 'status-line ok';
+            document.getElementById('execPanel').classList.remove('is-training');
+            document.getElementById('trainStatusBadge').textContent = 'DONE';
+            document.getElementById('sysLabel').textContent = 'READY';
+            ['dlPkl','dlOnnx','viewDocs'].forEach(id => document.getElementById(id).classList.remove('hidden'));
+            setStep(4);
+            log(`Champion: ${data.champion} · score: ${data.score}`);
+            log('Model saved → ready for download');
+          }
+        }, i * 120);
+      });
+
+      document.getElementById('dlPkl').onclick = () => { const a = document.createElement('a'); a.href='/download'; a.download='velo_model.pkl'; document.body.appendChild(a); a.click(); a.remove(); };
+      document.getElementById('dlOnnx').onclick = () => window.open('/download-onnx','_blank');
+      document.getElementById('viewDocs').onclick = () => window.open('/docs','_blank');
+
+    } else {
+      document.getElementById('trainStatus').textContent = '✗ ' + data.detail;
+      document.getElementById('trainStatus').className = 'status-line err';
+      document.getElementById('progressBar').style.width = '0%';
+      document.getElementById('execPanel').classList.remove('is-training');
+      document.getElementById('trainStatusBadge').textContent = 'ERROR';
+      document.getElementById('sysLabel').textContent = 'ERROR';
+      log('Train error: ' + data.detail);
+    }
+  } catch(e) {
+    document.getElementById('trainStatus').textContent = '✗ Connection failed';
+    document.getElementById('trainStatus').className = 'status-line err';
+    document.getElementById('execPanel').classList.remove('is-training');
+    log('Connection failed: ' + e.message);
+  }
+});
+
+/* ── Reset ── */
+document.getElementById('resetBtn').onclick = () => {
+  document.getElementById('progressBar').style.width = '0%';
+  document.getElementById('trainStatus').textContent = 'Awaiting dataset...';
+  document.getElementById('trainStatus').className = 'status-line';
+  document.getElementById('trainStatusBadge').textContent = 'IDLE';
+  document.getElementById('genStatus').textContent = '';
+  document.getElementById('uploadStatus').textContent = '';
+  document.getElementById('terminal').textContent = 'velo@ai-core:~$ reset\nvelo@ai-core:~$ ';
+  document.getElementById('lbList').innerHTML = "<div style='padding:16px;font-family:var(--mono);font-size:10px;color:var(--text3);'>No experiments run yet.</div>";
+  document.getElementById('previewWrap').innerHTML = "<div style='padding:16px;font-family:var(--mono);font-size:10px;color:var(--text3);'>No data loaded.</div>";
+  document.getElementById('previewMeta').textContent = '';
+  document.getElementById('scorePanel').classList.add('hidden');
+  document.getElementById('execPanel').classList.remove('is-training');
+  ['dlPkl','dlOnnx','viewDocs'].forEach(id => document.getElementById(id).classList.add('hidden'));
+  chart.data.labels=[]; chart.data.datasets[0].data=[]; chart.data.datasets[1].data=[]; chart.update();
+  document.getElementById('fileInput').value = '';
+  document.getElementById('sysLabel').textContent = 'ONLINE';
+  setStep(1);
+  log('System reset complete');
+};
+</script>
+</body>
+</html>
